@@ -25,7 +25,8 @@ object MahasiswaRepository {
                 tanggalLahir = "03 November 2004",
                 fotoProfil = "",
                 ipk = "3.75",
-                semester = "6"
+                semester = "6",
+                hobi = listOf("Coding", "Membaca", "Traveling")
             )
         )
     }

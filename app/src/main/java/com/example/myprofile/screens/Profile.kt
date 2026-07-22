@@ -49,7 +49,8 @@ data class BiodataMahasiswa(
     val tanggalLahir: String = "",
     val fotoProfil: String = "",
     val ipk: String = "3.75",
-    val semester: String = "6"
+    val semester: String = "6",
+    val hobi: List<String> = listOf("Coding", "Membaca", "Traveling")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +58,9 @@ data class BiodataMahasiswa(
 fun ProfileScreen(
     nim: String = "",
     onBackPressed: () -> Unit = {},
-    onUpdateBiodata: (BiodataMahasiswa) -> Unit = {}
+    onUpdateBiodata: (BiodataMahasiswa) -> Unit = {},
+    isDarkMode: Boolean = false,
+    onDarkModeToggle: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -77,7 +80,8 @@ fun ProfileScreen(
                 tanggalLahir = "03 November 2004",
                 fotoProfil = "",
                 ipk = "3.75",
-                semester = "6"
+                semester = "6",
+                hobi = listOf("Coding", "Membaca", "Traveling")
             )
         )
     }
@@ -142,16 +146,36 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showEditDialog = true }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit Profile",
-                            tint = Color.White
+                            if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                            contentDescription = "Toggle Dark Mode",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
+                        Switch(
+                            checked = isDarkMode,
+                            onCheckedChange = onDarkModeToggle,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray
+                            )
+                        )
+                        IconButton(onClick = { showEditDialog = true }) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit Profile",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A237E)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -160,7 +184,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -183,6 +207,35 @@ fun ProfileScreen(
                 // Informasi Pribadi
                 item {
                     PersonalInfoCard(biodata = biodata)
+                }
+
+                // Hobby Section
+                item {
+                    HobbyCard(hobbies = biodata.hobi)
+                }
+
+                // Tombol Share
+                item {
+                    OutlinedButton(
+                        onClick = {
+                            val shareIntent = android.content.Intent().apply {
+                                action = android.content.Intent.ACTION_SEND
+                                type = "text/plain"
+                                putExtra(
+                                    android.content.Intent.EXTRA_TEXT,
+                                    "Profil Mahasiswa:\nNama: ${biodata.nama}\nNIM: ${biodata.nim}\nJurusan: ${biodata.jurusan}"
+                                )
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Profil via"))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Share Profil", color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
@@ -224,7 +277,7 @@ fun ProfileHeader(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -240,7 +293,7 @@ fun ProfileHeader(
                     .border(
                         width = 3.dp,
                         brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF1A237E), Color(0xFF42A5F5))
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         ),
                         shape = CircleShape
                     )
@@ -260,14 +313,14 @@ fun ProfileHeader(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFFE3F2FD)),
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = "Default Avatar",
                             modifier = Modifier.size(60.dp),
-                            tint = Color(0xFF1A237E)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -279,13 +332,13 @@ fun ProfileHeader(
                 text = biodata.nama,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A237E)
+                color = MaterialTheme.colorScheme.primary
             )
 
             Text(
                 text = biodata.nim,
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -312,7 +365,8 @@ fun AcademicInfoCard(biodata: BiodataMahasiswa) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -323,27 +377,27 @@ fun AcademicInfoCard(biodata: BiodataMahasiswa) {
                 Icon(
                     Icons.Default.School,
                     contentDescription = null,
-                    tint = Color(0xFF1A237E)
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Informasi Akademik",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A237E)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             InfoRow(label = "Jurusan", value = biodata.jurusan)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Program Studi", value = biodata.prodi)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Angkatan", value = biodata.angkatan)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Semester", value = biodata.semester)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "IPK", value = biodata.ipk)
         }
     }
@@ -354,7 +408,8 @@ fun PersonalInfoCard(biodata: BiodataMahasiswa) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -365,28 +420,76 @@ fun PersonalInfoCard(biodata: BiodataMahasiswa) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = Color(0xFF1A237E)
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Informasi Pribadi",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A237E)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             InfoRow(label = "Email", value = biodata.email)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "No. Telepon", value = biodata.noHp)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Tempat Lahir", value = biodata.tempatLahir)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Tanggal Lahir", value = biodata.tanggalLahir)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
             InfoRow(label = "Alamat", value = biodata.alamat)
+        }
+    }
+}
+
+@Composable
+fun HobbyCard(hobbies: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Hobby",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                hobbies.forEach { hobby ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = hobby, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
         }
     }
 }
@@ -400,19 +503,19 @@ fun InfoRow(label: String, value: String) {
         Text(
             text = label,
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.4f)
         )
         Text(
             text = ":",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.1f)
         )
         Text(
             text = value,
             fontSize = 14.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(0.5f)
         )
     }
@@ -435,6 +538,18 @@ fun EditProfileDialog(
     var alamat by remember { mutableStateOf(tempBiodata.alamat) }
     var tempatLahir by remember { mutableStateOf(tempBiodata.tempatLahir) }
     var tanggalLahir by remember { mutableStateOf(tempBiodata.tanggalLahir) }
+    var hobi by remember { mutableStateOf(tempBiodata.hobi.joinToString(", ")) }
+    var fotoProfil by remember { mutableStateOf(tempBiodata.fotoProfil) }
+
+    // Launcher untuk memilih gambar dari galeri di dalam dialog
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            fotoProfil = it.toString()
+            onTempBiodataChange(tempBiodata.copy(fotoProfil = it.toString()))
+        }
+    }
 
     // Update state ketika tempBiodata berubah
     LaunchedEffect(tempBiodata) {
@@ -447,6 +562,8 @@ fun EditProfileDialog(
         alamat = tempBiodata.alamat
         tempatLahir = tempBiodata.tempatLahir
         tanggalLahir = tempBiodata.tanggalLahir
+        hobi = tempBiodata.hobi.joinToString(", ")
+        fotoProfil = tempBiodata.fotoProfil
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -466,7 +583,7 @@ fun EditProfileDialog(
                     text = "Edit Profil",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A237E)
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -474,7 +591,7 @@ fun EditProfileDialog(
                 Text(
                     text = "Edit data biodata Anda di bawah ini",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -484,6 +601,36 @@ fun EditProfileDialog(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
+                    item {
+                        // Input Foto Profil
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    .clickable { galleryLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (fotoProfil.isNotEmpty()) {
+                                    AsyncImage(
+                                        model = fotoProfil,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(Icons.Default.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                            TextButton(onClick = { galleryLauncher.launch("image/*") }) {
+                                Text("Ganti Foto Profil", color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
                     item {
                         OutlinedTextField(
                             value = nama,
@@ -623,6 +770,21 @@ fun EditProfileDialog(
                             maxLines = 3
                         )
                     }
+                    item {
+                        OutlinedTextField(
+                            value = hobi,
+                            onValueChange = {
+                                hobi = it
+                                onTempBiodataChange(
+                                    tempBiodata.copy(hobi = it.split(",").map { s -> s.trim() }.filter { s -> s.isNotEmpty() })
+                                )
+                            },
+                            label = { Text("Hobi (pisahkan dengan koma)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -636,7 +798,7 @@ fun EditProfileDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFF1A237E))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(
                             Icons.Default.Close,
@@ -644,7 +806,7 @@ fun EditProfileDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Batal", color = Color(0xFF1A237E))
+                        Text("Batal", color = MaterialTheme.colorScheme.primary)
                     }
 
                     Button(
@@ -652,7 +814,7 @@ fun EditProfileDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1A237E)
+                            containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Icon(
@@ -722,6 +884,10 @@ fun ImagePickerDialog(
 @Composable
 fun ProfileScreenPreview() {
     MaterialTheme {
-        ProfileScreen(nim = "23083000096")
+        ProfileScreen(
+            nim = "23083000096",
+            isDarkMode = false,
+            onDarkModeToggle = {}
+        )
     }
 }
