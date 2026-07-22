@@ -1,6 +1,4 @@
-# Ciko Restourant
-
-Aplikasi Android untuk sebuah restourant yang bernama Ciko Restourant.
+# MyApps - Week 1
 
 ## Screenshots
 
