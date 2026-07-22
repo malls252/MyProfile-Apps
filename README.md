@@ -2,7 +2,7 @@
 
 ## Screenshots
 
-berikut adalah tampilan dari aplikasi restoran saya:
+berikut adalah tampilan dari aplikasi saya:
 
 |              Login              |                Beranda                 |                 Daftar Nilai                  | Profile | Edit Profile |
 |:--------------------------------------:|:----------------------------------------:|:--------------------------------------------:| :---: | :---: |
